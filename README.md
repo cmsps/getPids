@@ -1,2 +1,2 @@
-# getPids_html,py
+# getPids_html.py
 Get PIDs from the BBC HTML schedules
