@@ -2,7 +2,7 @@
 '''
   getPids station     region | hd | fm | lw | ''     [ extraDays ]
 
-  Wed Apr 5 12:02:10 BST 2017
+  Wed Apr 5 18:26:22 BST 2017
 
   Copyright (C) 2017 Peter Scott - p.scott@shu.ac.uk
 
@@ -38,15 +38,16 @@
 
   Notes:
   ======
-     I am not a Python programmer.  This is a transcription of an earlier
-     shell script that used sed and awk for the screen scraping.  All offers
-     of improvement would be gladly accepted.
+     I am not a Python programmer.  This is a transcription of an
+     earlier shell script that used sed and awk for the screen scraping.
+     All offers of improvement would be gladly accepted.
 
-     The output order differs from that of the shell script version.
-     This is partly to avoid reinventing the tac command in Python.
+     I don't have windoze so I can't test this programme under it,
+     but I see no reason why it wouldn't work on that platform.
 
-     I am not sure this version with HTMLParser.py will be easier to
-     maintain than the previous one.
+     The output order differs from that of the original shell script
+     version.  This is partly to avoid reinventing Unix's tac command
+     in Python.
 '''
 
 from HTMLParser import HTMLParser
