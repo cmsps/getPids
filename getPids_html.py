@@ -2,7 +2,7 @@
 '''
   getPids station     region | hd | fm | lw | ''     [ extraDays ]
 
-  Tue Apr 4 15:53:48 BST 2017
+  Wed Apr 5 12:02:10 BST 2017
 
   Copyright (C) 2017 Peter Scott - p.scott@shu.ac.uk
 
@@ -50,7 +50,7 @@
 '''
 
 from HTMLParser import HTMLParser
-import requests, re, sys, datetime, time
+import requests, re, sys, datetime, time, os
 
 class MyHTMLParser( HTMLParser):
   def __init__( self):
@@ -170,7 +170,7 @@ def getArgs():
   global NAME, station, region, extra
 
   nargs = len( sys.argv) - 1
-  NAME = re.sub( '.*/', '', sys.argv [0])    # basename
+  NAME = os.path.basename( sys.argv [0])
   if nargs < 2 or nargs > 3:
       usage()
   station = sys.argv [1]
