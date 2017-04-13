@@ -2,7 +2,7 @@
 '''
   getPids station     region | hd | fm | lw | ''     [ extraDays ]
 
-  Wed Apr 5 18:26:22 BST 2017
+  Thu Apr 13 14:08:30 BST 2017
 
   Copyright (C) 2017 Peter Scott - p.scott@shu.ac.uk
 
@@ -23,8 +23,9 @@
 
   Purpose
   =======
-     Get BBC schedule for today and optional extra days with PIDs and dates
-     (most recent last).
+   Get the BBC schedule, with PIDs and dates, for today and optional
+   extra days.  If PIDs are repeated, only the earliest is displayed.
+   The output is in most recent last order.
 
   Examples:
   =========
@@ -42,8 +43,8 @@
      earlier shell script that used sed and awk for the screen scraping.
      All offers of improvement would be gladly accepted.
 
-     I don't have windoze so I can't test this programme under it,
-     but I see no reason why it wouldn't work on that platform.
+     I don't have windoze so I can't test this programme under it;
+     I see no reason why it wouldn't work on that platform.
 
      The output order differs from that of the original shell script
      version.  This is partly to avoid reinventing Unix's tac command
