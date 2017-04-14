@@ -2,7 +2,7 @@
 '''
   getPids station     region | hd | fm | lw | ''     [ extraDays ]
 
-  Fri Apr 14 13:08:01 BST 2017
+  Fri Apr 14 17:48:57 BST 2017
 
   Copyright (C) 2017 Peter Scott - p.scott@shu.ac.uk
 
@@ -25,7 +25,7 @@
   =======
    Get the BBC schedule, with PIDs and dates, for today and optional
    extra days.  If PIDs are repeated, only the earliest is displayed.
-   The output is in most recent last order.
+   The output is in latest-last order.
 
   Examples:
   =========
@@ -33,6 +33,7 @@
      $ getPids bbctwo hd 6
      $ getPids bbctwo england 30
      $ getPids radio4 fm
+     $ getPids radio4 lw
      $ getPids radio3 ''
      $ getPids 1xtra ''
      $ getPids 6music ''
@@ -46,9 +47,8 @@
      I don't have windoze so I can't test this programme under it;
      I see no reason why it wouldn't work on that platform.
 
-     The output order differs from that of the original shell script
-     version.  This is partly to avoid reinventing Unix's tac command
-     in Python.
+     The output order differs from that of the original shell script.
+     This is partly to avoid reinventing Unix's tac command in Python.
 '''
 
 from HTMLParser import HTMLParser
@@ -104,6 +104,11 @@ class MyHTMLParser( HTMLParser):
         self.repeat = ''
         self.step = 1
 
+    # leave early if not in the middle of a programme
+    #
+    if self.step == 0:
+        return
+
     # for all html tags, examine the attributes and values and collect the
     # relevant ones
     #
@@ -132,30 +137,30 @@ class MyHTMLParser( HTMLParser):
 
 
   def handle_data( self, data):
-      if self.step == 3:
-          self.time = data
-          self.step = 4
-      elif self.step == 7:
-          self.title = data
-          self.step = 8
-      elif self.step == 10:              # subtitle can be more than one line
-          data = data.strip( ' \t\n\r')
-          if data[-1:] == ',':
-              data = data + ' '
-          self.subtitle = self.subtitle + data
+    if self.step == 3:
+        self.time = data
+        self.step = 4
+    elif self.step == 7:
+        self.title = data
+        self.step = 8
+    elif self.step == 10:              # subtitle can be more than one line
+        data = data.strip( ' \t\n\r')
+        if data[-1:] == ',':
+            data = data + ' '
+        self.subtitle = self.subtitle + data
 
 
   def handle_endtag( self, tag):
-      if tag == 'h4':
-          self.step = 11            # terminate subtitle
-      elif tag == 'html':
-          self.printProgramme()     # flush out final programme
-          self.step = 0             # prepare for possible next page
+    if tag == 'h4':
+        self.step = 11            # terminate subtitle
+    elif tag == 'html':
+        self.printProgramme()     # flush out final programme
+        self.step = 0             # prepare for possible next page, why not?
 
 
   def newDate( self, expected):
     self.expected = expected
-    self.step = 0             # why not?
+    self.step = 0
 
 
 def errorMessage( message):
@@ -188,43 +193,22 @@ def getArgs():
           exit( 2)
 
 
-def mkDates (extra):
-  ''' make a list of dates so that running through midnight while waiting
-      for web pages doesn't mess up datetime.timedelta()
-  '''
-  start = 0
-  finish = 999
-  while start != finish:      # repeat until we didn't pass midnight
-      dateQueue = []
-      today = datetime.date.today()
-      start = today.day
-      for n in range( extra, -1, -1):
-          past = today - datetime.timedelta( days = n)
-          year = str( past.year)
-          month = str( past.month).zfill( 2)
-          day = str( past.day).zfill( 2)
-          date = (year, month, day)
-          dateQueue.append( date)
-      today = datetime.date.today()
-      finish = today.day
-  return dateQueue
-
-
 parser = MyHTMLParser()  # kept between pages to keep track of repeated PIDs
 
-NAME = ''                # globals
+NAME = ''        # globals
 station = ''
 region = ''
 extra = 0
 
+
 getArgs()
-dates = mkDates( extra)
-while len( dates) != 0:
-    year = dates [0][0]
-    month = dates [0][1]
-    day = dates [0][2]
+today = datetime.date.today()
+for n in range( extra, -1, -1):
+    scheduleDate = today - datetime.timedelta( days = n)
+    year = str( scheduleDate.year)
+    month = str( scheduleDate.month).zfill( 2)
+    day = str( scheduleDate.day).zfill( 2)
     date = year + '/' + month + '/' + day
-    remaining = len( dates) - 1
     url = 'http://www.bbc.co.uk/' + station + '/programmes/schedules/'
     if region == '':
         url = url + date
@@ -241,12 +225,11 @@ while len( dates) != 0:
         parser.feed( page.content)
     else:
         error = "couldn't get: " + url
-        if remaining != 0:
+        if n != 0:
             error = error + ' (continuing without it)'
         errorMessage( error)
-        if remaining == 0:
+        if n == 0:
             exit( 4)
-    if remaining != 0:
-        time.sleep( 3)          ################ kindness
-    del dates [0]
+    if n != 0:
+        time.sleep( 2)          # niceness
 exit( 0)
