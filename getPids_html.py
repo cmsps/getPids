@@ -2,7 +2,7 @@
 '''
   getPids station     region | hd | fm | lw | ''     [ extraDays ]
 
-  Fri Apr 14 12:54:48 BST 2017
+  Fri Apr 14 13:08:01 BST 2017
 
   Copyright (C) 2017 Peter Scott - p.scott@shu.ac.uk
 
@@ -163,8 +163,8 @@ def errorMessage( message):
 
 
 def usage():
-  sys.stderr.write( "Usage: " + NAME + \
-                  " station   region | hd | fm | lw | ''  [ extraDays ]" + "\n")
+  sys.stderr.write( 'Usage: ' + NAME + \
+                 " station   region | hd | fm | lw | ''  [ extraDays ]" + '\n')
   exit( 1)
 
 
@@ -194,17 +194,18 @@ def mkDates (extra):
   '''
   start = 0
   finish = 999
-  while start != finish:      # repeat until would be handy
+  while start != finish:      # repeat until we didn't pass midnight
       dateQueue = []
       today = datetime.date.today()
       start = today.day
       for n in range( extra, -1, -1):
-          past = today - datetime.timedelta( days=n)
+          past = today - datetime.timedelta( days = n)
           year = str( past.year)
           month = str( past.month).zfill( 2)
           day = str( past.day).zfill( 2)
           date = (year, month, day)
           dateQueue.append( date)
+      today = datetime.date.today()
       finish = today.day
   return dateQueue
 
