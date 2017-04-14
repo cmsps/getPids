@@ -2,7 +2,7 @@
 '''
   getPids station     region | hd | fm | lw | ''     [ extraDays ]
 
-  Thu Apr 13 14:08:30 BST 2017
+  Fri Apr 14 12:54:48 BST 2017
 
   Copyright (C) 2017 Peter Scott - p.scott@shu.ac.uk
 
@@ -163,8 +163,8 @@ def errorMessage( message):
 
 
 def usage():
-  sys.stderr.write( 'Usage: ' + NAME + \
-                  ' station   region | hd | fm | lw | ''  [ extraDays ]' + '\n')
+  sys.stderr.write( "Usage: " + NAME + \
+                  " station   region | hd | fm | lw | ''  [ extraDays ]" + "\n")
   exit( 1)
 
 
