@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 '''
-  getPids station     region | hd | fm | lw | ''     [ extraDays ]
+  getPids station  [region | hd | fm | lw]  [extraDays]
 
-  Fri Apr 14 17:48:57 BST 2017
+  Sat Apr 15 17:40:30 BST 2017
 
   Copyright (C) 2017 Peter Scott - p.scott@shu.ac.uk
 
@@ -34,9 +34,10 @@
      $ getPids bbctwo england 30
      $ getPids radio4 fm
      $ getPids radio4 lw
-     $ getPids radio3 ''
-     $ getPids 1xtra ''
-     $ getPids 6music ''
+     $ getPids radio3
+     $ getPids 1xtra
+     $ getPids 6music
+     $ getPids 6music 6
 
   Notes:
   ======
@@ -69,11 +70,9 @@ class MyHTMLParser( HTMLParser):
 
 
   def printProgramme( self):
-    ''' this is messy but it avoids print's trailing spaces!
+    ''' Drop tomorrow's programmes and repeated PIDs, print the others.
+        The code is messy to avoid print's trailing spaces!
     '''
-
-    # drop tomorrow's programmes and repeated PIDs
-    #
     if self.date == self.expected and self.pid not in self.hadPid:
         print '{0}-{1} {2}'.format( self.date, self.time, self.pid),
         if self.subtitle + self.repeat == '':
@@ -104,12 +103,12 @@ class MyHTMLParser( HTMLParser):
         self.repeat = ''
         self.step = 1
 
-    # leave early if not in the middle of a programme
+    # leave early if not had first h3
     #
     if self.step == 0:
         return
 
-    # for all html tags, examine the attributes and values and collect the
+    # for all tags, examine the attributes and values and collect the
     # relevant ones
     #
     for n in range( 0, len( attrs)):
@@ -158,7 +157,7 @@ class MyHTMLParser( HTMLParser):
         self.step = 0             # prepare for possible next page, why not?
 
 
-  def newDate( self, expected):
+  def newPage( self, expected):
     self.expected = expected
     self.step = 0
 
@@ -169,7 +168,7 @@ def errorMessage( message):
 
 def usage():
   sys.stderr.write( 'Usage: ' + NAME + \
-                 " station   region | hd | fm | lw | ''  [ extraDays ]" + '\n')
+                            ' station  [region | hd | fm | lw]  [extraDays]\n')
   exit( 1)
 
 
@@ -178,19 +177,27 @@ def getArgs():
 
   nargs = len( sys.argv) - 1
   NAME = os.path.basename( sys.argv [0])
-  if nargs < 2 or nargs > 3:
+  if nargs == 0:
       usage()
-  station = sys.argv [1]
-  region = sys.argv [2]
-  if region.isdigit():
-      errorMessage( 'warning: ' + region + ": doesn't look like a region")
-  if nargs == 3:
+  else:
+      station = sys.argv [1]
+  if nargs == 1:
+      return
+  elif nargs == 2:
+      if sys.argv [2].isdigit():
+          extra = int( sys.argv [2])
+      else:
+          region = sys.argv [2]
+  elif nargs == 3:
+      region = sys.argv [2]
       try:
           extra = int( sys.argv [3])
       except ValueError:
           extra = sys.argv [3]
           errorMessage( extra + ": isn't a number")
           exit( 2)
+  else:
+      usage()
 
 
 parser = MyHTMLParser()  # kept between pages to keep track of repeated PIDs
@@ -221,7 +228,7 @@ for n in range( extra, -1, -1):
         errorMessage( 'network error')
         exit( 3)
     if response == 200:
-        parser.newDate( date)
+        parser.newPage( date)
         parser.feed( page.content)
     else:
         error = "couldn't get: " + url
