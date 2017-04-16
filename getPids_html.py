@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 '''
-  getPids station  [region | hd | fm | lw]  [extraDays]
+  getPids station  [ region | hd | fm | lw | mw ]  [ extraDays ]
 
-  Sat Apr 15 17:40:30 BST 2017
+  Sun Apr 16 11:59:58 BST 2017
 
   Copyright (C) 2017 Peter Scott - p.scott@shu.ac.uk
 
@@ -29,15 +29,19 @@
 
   Examples:
   =========
-     $ getPids bbcone yorkshire
+     $ getPids bbcone wales
+     $ getPids bbcone wales_hd
      $ getPids bbctwo hd 6
      $ getPids bbctwo england 30
      $ getPids radio4 fm
      $ getPids radio4 lw
+     $ getPids radioscotland mw
      $ getPids radio3
      $ getPids 1xtra
      $ getPids 6music
      $ getPids 6music 6
+
+  See: http://www.bbc.co.uk/radio/stations for more radio stations.
 
   Notes:
   ======
@@ -168,7 +172,7 @@ def errorMessage( message):
 
 def usage():
   sys.stderr.write( 'Usage: ' + NAME + \
-                            ' station  [region | hd | fm | lw]  [extraDays]\n')
+                   ' station  [ region | hd | fm | lw | mw ]  [ extraDays ]\n')
   exit( 1)
 
 
