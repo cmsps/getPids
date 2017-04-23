@@ -1,8 +1,8 @@
-#!/usr/bin/python3.5
+#!/usr/bin/env python
 '''
   getPids station  [ region | hd | fm | lw | mw ]  [ extraDays ]
 
-  Sun Apr 16 11:59:58 BST 2017
+  Sun Apr 23 17:28:19 BST 2017
 
   Copyright (C) 2017 Peter Scott - p.scott@shu.ac.uk
 
@@ -23,9 +23,9 @@
 
   Purpose
   =======
-   Get the BBC schedule, with PIDs and dates, for today and optional
-   extra days.  If PIDs are repeated, only the earliest is displayed.
-   The output is in latest-last order.
+     Get the BBC schedule, with PIDs and dates, for today and optional
+     extra days.  If PIDs are repeated, only the earliest is displayed.
+     The output is in latest-last order.
 
   Examples:
   =========
@@ -41,23 +41,32 @@
      $ getPids 6music
      $ getPids 6music 6
 
-  See: http://www.bbc.co.uk/radio/stations for more radio stations.
+     See: http://www.bbc.co.uk/radio/stations for more radio stations.
 
   Notes:
   ======
+     getPids runs with Python 2 _and_ Python 3.  You will need to install
+     the "six.py" module (via pip) to enable this.  You will also need
+     "requests" and "HTMLParser" (for Python 2) or "html.parser" (for
+     Python 3).
+
      I am not a Python programmer.  This is a transcription of an
      earlier shell script that used sed and awk for the screen scraping.
      All offers of improvement would be gladly accepted.
 
-     I don't have windoze so I can't test this programme under it;
-     I see no reason why it wouldn't work on that platform.
+     I know nothing about windoze so I can't test getPids with it.
+     Apart from possible renaming of the script, I see no reason why it
+     wouldn't work on that platform.
 
      The output order differs from that of the original shell script.
      This is partly to avoid reinventing Unix's tac command in Python.
 '''
 
-from html.parser import HTMLParser
-import requests, re, sys, datetime, time, os
+import six, requests, re, sys, datetime, time, os
+if  six.PY2:
+    from HTMLParser import HTMLParser
+else:
+    from html.parser import HTMLParser
 
 class MyHTMLParser( HTMLParser):
   def __init__( self):
@@ -70,24 +79,24 @@ class MyHTMLParser( HTMLParser):
     self.step = 0
     self.expected = ''
     self.hadPid = {}
-    super().__init__( convert_charrefs=False)
+    HTMLParser.__init__( self)
 
 
   def printProgramme( self):
-    ''' Drop tomorrow's programmes and repeated PIDs, print the others.
-        The code is messy to avoid print's trailing spaces!
-    '''
+
+    # Drop tomorrow's programmes and repeated PIDs, print the others.
+    #
     if self.date == self.expected and self.pid not in self.hadPid:
-        print( '{0}-{1} {2}'.format( self.date, self.time, self.pid), end=' ')
-        if self.subtitle + self.repeat == '':
-            print( '"{0}"'.format( self.title))
-        elif self.repeat == '':
-            print( '"{0} - {1}"'.format( self.title, self.subtitle))
-        elif self.subtitle == '':
-            print( '"{0}" {1}'.format( self.title, self.repeat))
+        six.print_( '{0}-{1} {2} "{3}'.format( \
+                           self.date, self.time, self.pid, self.title), end='')
+        if self.subtitle == '':
+            six.print_( '"', end='')
         else:
-            print( '"{0} - {1}" {2}'.format( \
-                                       self.title, self.subtitle, self.repeat))
+            six.print_( ' - {0}"'.format( self.subtitle), end='')
+        if self.repeat == '':
+            six.print_( '', end='\n')
+        else:
+            six.print_( ' ', self.repeat, end='\n')
         self.hadPid [self.pid] = True
 
 
@@ -204,43 +213,48 @@ def getArgs():
       usage()
 
 
-parser = MyHTMLParser()  # kept between pages to keep track of repeated PIDs
+if __name__ == '__main__':
 
-NAME = ''        # globals
-station = ''
-region = ''
-extra = 0
+  parser = MyHTMLParser()  # kept between pages to keep track of repeated PIDs
+
+  NAME = ''        # globals
+  station = ''
+  region = ''
+  extra = 0
 
 
-getArgs()
-today = datetime.date.today()
-for n in range( extra, -1, -1):
-    scheduleDate = today - datetime.timedelta( days = n)
-    year = str( scheduleDate.year)
-    month = str( scheduleDate.month).zfill( 2)
-    day = str( scheduleDate.day).zfill( 2)
-    date = year + '/' + month + '/' + day
-    url = 'http://www.bbc.co.uk/' + station + '/programmes/schedules/'
-    if region == '':
-        url = url + date
-    else:
-        url = url + region + '/' + date
-    try:
-        page = requests.get(url)
-        response = page.status_code
-    except:
-        errorMessage( 'network error')
-        exit( 3)
-    if response == 200:
-        parser.newPage( date)
-        parser.feed( bytes.decode( page.content))
-    else:
-        error = "couldn't get: " + url
-        if n != 0:
-            error = error + ' (continuing without it)'
-        errorMessage( error)
-        if n == 0:
-            exit( 4)
-    if n != 0:
-        time.sleep( 2)          # niceness
-exit( 0)
+  getArgs()
+  today = datetime.date.today()
+  for n in range( extra, -1, -1):
+      scheduleDate = today - datetime.timedelta( days = n)
+      year = str( scheduleDate.year)
+      month = str( scheduleDate.month).zfill( 2)
+      day = str( scheduleDate.day).zfill( 2)
+      date = year + '/' + month + '/' + day
+      url = 'http://www.bbc.co.uk/' + station + '/programmes/schedules/'
+      if region == '':
+          url = url + date
+      else:
+          url = url + region + '/' + date
+      try:
+          page = requests.get(url)
+          response = page.status_code
+      except:
+          errorMessage( 'network error')
+          exit( 3)
+      if response == 200:
+          parser.newPage( date)
+          if  six.PY2:
+              parser.feed( page.content)
+          else:
+              parser.feed( bytes.decode( page.content))
+      else:
+          error = "couldn't get: " + url
+          if n != 0:
+              error = error + ' (continuing without it)'
+          errorMessage( error)
+          if n == 0:
+              exit( 4)
+      if n != 0:
+          time.sleep( 2)          # niceness
+  exit( 0)
