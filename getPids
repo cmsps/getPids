@@ -2,7 +2,7 @@
 '''
   getPids station  [ region | hd | fm | lw | mw ]  [ extraDays ]
 
-  Sun Apr 23 17:28:19 BST 2017
+  Sun Apr 23 17:46:29 BST 2017
 
   Copyright (C) 2017 Peter Scott - p.scott@shu.ac.uk
 
@@ -47,7 +47,7 @@
   ======
      getPids runs with Python 2 _and_ Python 3.  You will need to install
      the "six.py" module (via pip) to enable this.  You will also need
-     "requests" and "HTMLParser" (for Python 2) or "html.parser" (for
+     "requests", plus "HTMLParser" (for Python 2) or "html.parser" (for
      Python 3).
 
      I am not a Python programmer.  This is a transcription of an
