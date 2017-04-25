@@ -2,7 +2,7 @@
 '''
   getPids station  [ region | hd | fm | lw | mw ]  [ extraDays ]
 
-  Sun Apr 23 17:46:29 BST 2017
+  Tue Apr 25 19:15:47 BST 2017
 
   Copyright (C) 2017 Peter Scott - p.scott@shu.ac.uk
 
@@ -47,16 +47,11 @@
   ======
      getPids runs with Python 2 _and_ Python 3.  You will need to install
      the "six.py" module (via pip) to enable this.  You will also need
-     "requests", plus "HTMLParser" (for Python 2) or "html.parser" (for
-     Python 3).
+     "requests" and "HTMLParser".
 
      I am not a Python programmer.  This is a transcription of an
      earlier shell script that used sed and awk for the screen scraping.
      All offers of improvement would be gladly accepted.
-
-     I know nothing about windoze so I can't test getPids with it.
-     Apart from possible renaming of the script, I see no reason why it
-     wouldn't work on that platform.
 
      The output order differs from that of the original shell script.
      This is partly to avoid reinventing Unix's tac command in Python.
