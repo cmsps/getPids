@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 '''
-  getPids station  [ region | hd | fm | lw | mw ]  [ extraDays ]
+  getPids station [-days] [+days] [ region | hd | fm | lw | mw ]
 
-  Tue Apr 25 19:15:47 BST 2017
+  Tue May 23 23:09:14 BST 2017
 
   Copyright (C) 2017 Peter Scott - p.scott@shu.ac.uk
 
@@ -24,22 +24,21 @@
   Purpose
   =======
      Get the BBC schedule, with PIDs and dates, for today and optional
-     extra days.  If PIDs are repeated, only the earliest is displayed.
-     The output is in latest-last order.
+     extra past and/or future days.  If PIDs are repeated, only the
+     earliest is displayed.  The output is in latest-last order.
 
   Examples:
   =========
-     $ getPids bbcone wales
-     $ getPids bbcone wales_hd
-     $ getPids bbctwo hd 6
-     $ getPids bbctwo england 30
-     $ getPids radio4 fm
-     $ getPids radio4 lw
-     $ getPids radioscotland mw
-     $ getPids radio3
-     $ getPids 1xtra
-     $ getPids 6music
-     $ getPids 6music 6
+     $ getPids       bbcone wales
+     $ getPids       bbcone wales_hd
+     $ getPids -30   bbctwo hd
+     $ getPids +6    bbctwo england
+     $ getPids       radio4 fm
+     $ getPids       radio4 lw
+     $ getPids       radioscotland mw
+     $ getPids       radio3
+     $ getPids       1xtra
+     $ getPids -6 +6 6music
 
      See: http://www.bbc.co.uk/radio/stations for more radio stations.
 
@@ -57,7 +56,7 @@
      This is partly to avoid reinventing Unix's tac command in Python.
 '''
 
-import six, requests, re, sys, datetime, time, os
+import six, requests, re, sys, datetime, time, os, string
 if  six.PY2:
     from HTMLParser import HTMLParser
 else:
@@ -150,7 +149,10 @@ class MyHTMLParser( HTMLParser):
     elif self.step == 7:
         self.title = data
         self.step = 8
-    elif self.step == 10:              # subtitle can be more than one line
+    elif self.step == 10:
+
+        # subtitle can be more than one line
+        #
         data = data.strip( ' \t\n\r')
         if data[-1:] == ',':
             data = data + ' '
@@ -176,35 +178,40 @@ def errorMessage( message):
 
 def usage():
   sys.stderr.write( 'Usage: ' + NAME + \
-                   ' station  [ region | hd | fm | lw | mw ]  [ extraDays ]\n')
+        ' [ -days ] [ +days ] station  [ region | hd | fm | lw | mw ]\n')
   exit( 1)
 
 
 def getArgs():
-  global NAME, station, region, extra
+  global NAME, station, region, before, after
 
-  nargs = len( sys.argv) - 1
   NAME = os.path.basename( sys.argv [0])
-  if nargs == 0:
+  sys.argv.pop(0)
+  if len( sys.argv) == 0:
       usage()
-  else:
-      station = sys.argv [1]
-  if nargs == 1:
-      return
-  elif nargs == 2:
-      if sys.argv [2].isdigit():
-          extra = int( sys.argv [2])
+
+ # deal with -days and or +days
+ #
+  while re.match('^[-+][0-9][0-9]*$',sys.argv [0]):
+      if re.match('^-[0-9][0-9]*$',sys.argv [0]):
+          before = int( re.sub( '-', '', sys.argv [0]))
       else:
-          region = sys.argv [2]
-  elif nargs == 3:
-      region = sys.argv [2]
-      try:
-          extra = int( sys.argv [3])
-      except ValueError:
-          extra = sys.argv [3]
-          errorMessage( extra + ": isn't a number")
-          exit( 2)
-  else:
+          after = -1 - int( re.sub( '\+', '', sys.argv [0])) 
+      sys.argv.pop(0)
+      if len( sys.argv) == 0:
+          usage()
+
+  if re.match('^[-+]',sys.argv [0]):
+       days = re.sub( '[-+]', '', sys.argv [0], 1)
+       errorMessage( '`' + days + "' isn't a number of days")
+       exit( 2)
+  station = sys.argv [0]
+  sys.argv.pop(0)
+  if len( sys.argv) == 0:
+      return
+  region = sys.argv [0]
+  sys.argv.pop(0)
+  if len( sys.argv) != 0:
       usage()
 
 
@@ -215,12 +222,13 @@ if __name__ == '__main__':
   NAME = ''        # globals
   station = ''
   region = ''
-  extra = 0
+  before = 0
+  after = -1
 
 
   getArgs()
   today = datetime.date.today()
-  for n in range( extra, -1, -1):
+  for n in range( before, after, -1):
       scheduleDate = today - datetime.timedelta( days = n)
       year = str( scheduleDate.year)
       month = str( scheduleDate.month).zfill( 2)
@@ -245,11 +253,11 @@ if __name__ == '__main__':
               parser.feed( bytes.decode( page.content))
       else:
           error = "couldn't get: " + url
-          if n != 0:
+          if n != after + 1:
               error = error + ' (continuing without it)'
           errorMessage( error)
-          if n == 0:
+          if n == after + 1:
               exit( 4)
-      if n != 0:
+      if n != after + 1:
           time.sleep( 2)          # niceness
   exit( 0)
