@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 '''
-  getPids station [-days] [+days] [ region | hd | fm | lw | mw ]
+  getPids [-days] [+days] station [ region | hd | fm | lw | mw ]
 
-  Tue May 23 23:09:14 BST 2017
+  Wed May 24 17:33:02 BST 2017
 
   Copyright (C) 2017 Peter Scott - p.scott@shu.ac.uk
 
