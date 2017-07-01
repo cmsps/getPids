@@ -1,2 +1,4 @@
-# getPids_html.py
-Get PIDs from the BBC HTML schedules
+# getPids
+Get PIDs from the BBC HTML schedules.
+
+This script uses a Python parser to untangle the HTML.
