@@ -2,7 +2,7 @@
 '''
   getPids [-days] [+days] station [ region | hd | fm | lw | mw ]
 
-  Wed May 24 17:33:02 BST 2017
+  Fri Jun 30 17:16:05 BST 2017
 
   Copyright (C) 2017 Peter Scott - p.scott@shu.ac.uk
 
@@ -247,10 +247,7 @@ if __name__ == '__main__':
           exit( 3)
       if response == 200:
           parser.newPage( date)
-          if  six.PY2:
-              parser.feed( page.content)
-          else:
-              parser.feed( bytes.decode( page.content))
+          parser.feed( page.text)
       else:
           error = "couldn't get: " + url
           if n != after + 1:
