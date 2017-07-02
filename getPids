@@ -2,7 +2,7 @@
 '''
   getPids [-days] [+days] station [ region | hd | fm | lw | mw ]
 
-  Sat Jul 1 12:12:45 BST 2017
+  Sun Jul 2 12:04:39 BST 2017
 
   Copyright (C) 2017 Peter Scott - p.scott@shu.ac.uk
 
@@ -83,14 +83,12 @@ class MyHTMLParser( HTMLParser):
     if self.date == self.expected and self.pid not in self.hadPid:
         six.print_( '{0}-{1} {2} "{3}'.format( \
                            self.date, self.time, self.pid, self.title), end='')
-        if self.subtitle == '':
-            six.print_( '"', end='')
-        else:
-            six.print_( ' - {0}"'.format( self.subtitle), end='')
+        if self.subtitle:
+            six.print_( ' - {0}'.format( self.subtitle), end='')
         if self.repeat == '':
-            six.print_( '', end='\n')
+            six.print_( '"', end='\n')
         else:
-            six.print_( ' ', self.repeat, end='\n')
+            six.print_( '"', self.repeat, end='\n')
         self.hadPid [self.pid] = True
 
 
