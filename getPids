@@ -2,7 +2,7 @@
 '''
   getPids [-days] [+days] station [ region | hd | fm | lw | mw ]
 
-  Sun Jul 2 12:04:39 BST 2017
+  Thu Nov 2 18:02:59 GMT 2017
 
   Copyright (C) 2017 Peter Scott - p.scott@shu.ac.uk
 
@@ -44,9 +44,9 @@
 
   Notes:
   ======
-     getPids runs with Python 2 _and_ Python 3.  You will need to install
-     the "six.py" module (via pip) to enable this.  You will also need
-     "requests" and "HTMLParser".
+     getPids runs with Python 2.7 _and_ Python 3.  You will need to
+     install the "six.py" module (via pip) to enable this.  You will
+     also need "requests" and "HTMLParser".
 
      I am not a Python programmer.  This is a transcription of an
      earlier shell script that used sed and awk for the screen scraping.
@@ -176,7 +176,7 @@ def errorMessage( message):
 
 def usage():
   sys.stderr.write( 'Usage: ' + NAME + \
-        ' [ -days ] [ +days ] station  [ region | hd | fm | lw | mw ]\n')
+              ' [ -days ] [ +days ] station  [ region | hd | fm | lw | mw ]\n')
   exit( 1)
 
 
@@ -200,9 +200,9 @@ def getArgs():
           usage()
 
   if re.match('^[-+]',sys.argv [0]):
-       days = re.sub( '[-+]', '', sys.argv [0], 1)
-       errorMessage( '`' + days + "' isn't a number of days")
-       exit( 2)
+      days = re.sub( '[-+]', '', sys.argv [0], 1)
+      errorMessage( '`' + days + "' isn't a number of days")
+      exit( 2)
   station = sys.argv [0]
   sys.argv.pop(0)
   if len( sys.argv) == 0:
