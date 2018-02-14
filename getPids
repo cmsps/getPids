@@ -2,9 +2,9 @@
 '''
   getPids [-days] [+days] station [ region | hd | fm | lw | mw ]
 
-  Thu Nov 2 18:02:59 GMT 2017
+  Mon Feb 12 22:48:27 GMT 2018
 
-  Copyright (C) 2017 Peter Scott - p.scott@shu.ac.uk
+  Copyright (C) 2018 Peter Scott - peterscott@pobox.com
 
   Licence
   =======
@@ -213,16 +213,16 @@ def getArgs():
       usage()
 
 
+NAME = ''        # globals
+station = ''
+region = ''
+before = 0
+after = -1
+
+
 if __name__ == '__main__':
 
   parser = MyHTMLParser()  # kept between pages to keep track of repeated PIDs
-
-  NAME = ''        # globals
-  station = ''
-  region = ''
-  before = 0
-  after = -1
-
 
   getArgs()
   today = datetime.date.today()
