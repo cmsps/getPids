@@ -2,7 +2,7 @@
 '''
   getPids [-days] [+days] station [ region | hd | fm | lw | mw ]
 
-  Mon Feb 12 22:48:27 GMT 2018
+  Fri Mar 23 14:44:00 GMT 2018
 
   Copyright (C) 2018 Peter Scott - peterscott@pobox.com
 
@@ -129,15 +129,17 @@ class MyHTMLParser( HTMLParser):
             self.step = 5
         elif self.step == 5 and value == 'programme__title ':
             self.step = 6
-        elif self.step == 6 and value == 'name':
-            self.step = 7   # next data
-        elif self.step == 8 and value == 'programme__subtitle centi':
-            self.step = 9
-        elif self.step == 9 and value == 'name':
-            self.step = 10   # next data
-        elif self.step == 11 and value == 'Repeat':
+        elif self.step == 6:   # wait for intervening span
+            self.step = 7
+        elif self.step == 7 and value == 'name':
+            self.step = 8   # next data
+        elif self.step == 9 and value == 'programme__subtitle centi':
+            self.step = 10
+        elif self.step == 10 and value == 'name':
+            self.step = 11   # next data
+        elif self.step == 12 and value == 'Repeat':
             self.repeat = '(R)'
-            self.step = 12   # why not?
+            self.step = 13   # why not?
 
 
   def handle_data( self, data):
@@ -146,7 +148,7 @@ class MyHTMLParser( HTMLParser):
         self.step = 4
     elif self.step == 7:
         self.title = data
-        self.step = 8
+        self.step = 9
     elif self.step == 10:
 
         # subtitle can be more than one line
@@ -159,7 +161,7 @@ class MyHTMLParser( HTMLParser):
 
   def handle_endtag( self, tag):
     if tag == 'h4':
-        self.step = 11            # terminate subtitle
+        self.step = 12            # terminate subtitle
     elif tag == 'html':
         self.printProgramme()     # flush out final programme
         self.step = 0             # prepare for possible next page, why not?
