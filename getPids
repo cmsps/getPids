@@ -128,28 +128,25 @@ class MyHTMLParser( HTMLParser):
             self.pid = value
             self.step = 5
         elif self.step == 5 and value == 'programme__title ':
+
+            # wait for intervening span
+            #
             self.step = 6
-        elif self.step == 6:   # wait for intervening span
-            self.step = 7
-        elif self.step == 7 and value == 'name':
+        elif self.step == 7 and value == 'programme__subtitle centi':
             self.step = 8   # next data
-        elif self.step == 9 and value == 'programme__subtitle centi':
-            self.step = 10
-        elif self.step == 10 and value == 'name':
-            self.step = 11   # next data
-        elif self.step == 12 and value == 'Repeat':
+        elif self.step == 9 and value == 'Repeat':
             self.repeat = '(R)'
-            self.step = 13   # why not?
+            self.step = 10   # why not?
 
 
   def handle_data( self, data):
     if self.step == 3:
         self.time = data
         self.step = 4
-    elif self.step == 7:
+    elif self.step == 6:
         self.title = data
-        self.step = 9
-    elif self.step == 10:
+        self.step = 7
+    elif self.step == 8:
 
         # subtitle can be more than one line
         #
@@ -161,7 +158,7 @@ class MyHTMLParser( HTMLParser):
 
   def handle_endtag( self, tag):
     if tag == 'h4':
-        self.step = 12            # terminate subtitle
+        self.step = 9             # terminate subtitle
     elif tag == 'html':
         self.printProgramme()     # flush out final programme
         self.step = 0             # prepare for possible next page, why not?
