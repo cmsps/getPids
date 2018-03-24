@@ -2,7 +2,7 @@
 '''
   getPids [-days] [+days] station [ region | hd | fm | lw | mw ]
 
-  Fri Mar 23 22:33:43 GMT 2018
+  Sat Mar 24 11:42:58 GMT 2018
 
   Copyright (C) 2018 Peter Scott - peterscott@pobox.com
 
@@ -81,10 +81,10 @@ class MyHTMLParser( HTMLParser):
     # Drop tomorrow's programmes and repeated PIDs, print the others.
     #
     if self.date == self.expected and self.pid not in self.hadPid:
-        six.print_( '{0}-{1} {2} "{3}'.format( \
+        six.print_( u'{0}-{1} {2} "{3}'.format( \
                            self.date, self.time, self.pid, self.title), end='')
         if self.subtitle:
-            six.print_( ' - {0}'.format( self.subtitle), end='')
+            six.print_( u' - {0}'.format( self.subtitle), end='')
         if self.repeat == '':
             six.print_( '"', end='\n')
         else:
