@@ -2,7 +2,7 @@
 '''
   getPids [-days] [+days] station [ region | hd | fm | lw | mw ]
 
-  Sat Mar 31 23:21:16 BST 2018
+  Sat Mar 31 23:43:26 BST 2018
 
   Copyright (C) 2018 Peter Scott - peterscott@pobox.com
 
@@ -179,7 +179,7 @@ class MyHTMLParser( HTMLParser):
         c = '-'
     else:
         c = unichr( name2codepoint[name])
-        self.append( c)
+    self.append( c)
 
 
   def handle_charref( self, name):
