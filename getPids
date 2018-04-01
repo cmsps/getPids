@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/python3.6
 '''
-  getPids [-days] [+days] station [ region | hd | fm | lw | mw ]
+  getPids [-a] [-days] [+days] station [ region | hd | fm | lw | mw ]
 
-  Sat Mar 31 23:43:26 BST 2018
+  Sun Apr 1 11:39:15 BST 2018
 
   Copyright (C) 2018 Peter Scott - peterscott@pobox.com
 
@@ -24,8 +24,9 @@
   Purpose
   =======
      Get the BBC schedule, with PIDs and dates, for today and optional
-     extra past and/or future days.  If PIDs are repeated, only the
-     earliest is displayed.  The output is in latest-last order.
+     extra past and/or future days.  If PIDs are repeated, only
+     the earliest is displayed, unless the -a (all) option is used.
+     The output is in latest-last order.
 
   Examples:
   =========
@@ -87,21 +88,21 @@ class MyHTMLParser( HTMLParser):
     if (self.date == self.expected) and (self.pid not in self.hadPid):
 
         # unidecode removes accents to stop print from grumbling about
-        # codecs for console output (especially when doing Radio3)
+        # codecs for standard output (especially when doing Radio3)
         #
         self.title = unidecode.unidecode( self.title)
-        if self.subtitle:
-            self.subtitle = unidecode.unidecode( self.subtitle)
 
         six.print_( '{0}-{1} {2} "{3}'.format( \
                            self.date, self.time, self.pid, self.title), end='')
         if self.subtitle:
+            self.subtitle = unidecode.unidecode( self.subtitle)
             six.print_( ' - {0}'.format( self.subtitle), end='')
         if self.repeat == '':
             six.print_( '"', end='\n')
         else:
             six.print_( '"', self.repeat, end='\n')
-        self.hadPid [self.pid] = avoidRepeats
+        if avoidRepeats:
+            self.hadPid[self.pid] = True
 
 
   def handle_starttag( self, tag, attrs):
@@ -129,8 +130,8 @@ class MyHTMLParser( HTMLParser):
     # relevant ones
     #
     for n in range( 0, len( attrs)):
-        attr  = attrs [n][0]
-        value =  attrs [n][1]
+        attr  = attrs[n][0]
+        value =  attrs[n][1]
         if self.step == 1 and attr == 'content':
             self.date = re.sub( '-', '/', value[0:10])
             self.step = 2
@@ -184,7 +185,7 @@ class MyHTMLParser( HTMLParser):
 
   def handle_charref( self, name):
     if name.startswith( 'x'):
-        c = unichr( int( name [1:], 16))
+        c = unichr( int( name[1:], 16))
     elif name == '027' or name == '039':
         c = "'"
     else:
@@ -211,39 +212,41 @@ def errorMessage( message):
 
 
 def usage():
-  sys.stderr.write( 'Usage: ' + NAME + \
-              ' [ -days ] [ +days ] station  [ region | hd | fm | lw | mw ]\n')
+  sys.stderr.write( 'Usage: ' + NAME + ' [-a] [-days] [+days] station ' + \
+      '[region | hd | fm | lw | mw]\n\n' + \
+      'Option:\n       -a     all pids including repeats\n')
   exit( 1)
 
 
 def getArgs():
-  global NAME, station, region, before, after
+  global NAME, station, region, before, after, avoidRepeats
 
-  NAME = os.path.basename( sys.argv [0])
+  NAME = os.path.basename( sys.argv[0])
   sys.argv.pop(0)
+
+ # deal with -days, +days and options
+ #
   if len( sys.argv) == 0:
       usage()
-
- # deal with -days and or +days
- #
-  while re.match( '^[-+][0-9][0-9]*$',sys.argv [0]):
-      if re.match( '^-[0-9][0-9]*$',sys.argv [0]):
-          before = int( re.sub( '-', '', sys.argv [0]))
+  while re.match( '^[-+]',sys.argv[0]):
+      if re.match( '^-[0-9][0-9]*$',sys.argv[0]):
+          before = int( re.sub( '-', '', sys.argv[0]))
+      elif re.match( '^\+[0-9][0-9]*$',sys.argv[0]):
+          after = -1 - int( re.sub( '\+', '', sys.argv[0])) 
+      elif re.match( '^-a$', sys.argv[0]):
+          avoidRepeats = False
       else:
-          after = -1 - int( re.sub( '\+', '', sys.argv [0])) 
-      sys.argv.pop(0)
-      if len( sys.argv) == 0:
+          sys.stderr.write( 'Bad option: ' + sys.argv[0] + '\n\n')
           usage()
+      sys.argv.pop(0)
 
-  if re.match( '^[-+]',sys.argv [0]):
-      days = re.sub( '[-+]', '', sys.argv [0], 1)
-      errorMessage( '`' + days + "' isn't a number of days")
-      exit( 2)
-  station = sys.argv [0]
+  if len( sys.argv) == 0:
+      usage()
+  station = sys.argv[0]
   sys.argv.pop(0)
   if len( sys.argv) == 0:
       return
-  region = sys.argv [0]
+  region = sys.argv[0]
   sys.argv.pop(0)
   if len( sys.argv) != 0:
       usage()
