@@ -1,4 +1,4 @@
-#!/usr/bin/python3.6
+#!/usr/bin/env python
 '''
   getPids [-a] [-days] [+days] station [ region | hd | fm | lw | mw ]
 
