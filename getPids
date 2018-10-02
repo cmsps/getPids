@@ -2,7 +2,7 @@
 '''
   getPids [-a] [-days] [+days] station [ region | hd | fm | lw | mw ]
 
-  Sun Apr 1 11:39:15 BST 2018
+  Tue Oct 2 11:56:02 BST 2018
 
   Copyright (C) 2018 Peter Scott - peterscott@pobox.com
 
@@ -23,10 +23,10 @@
 
   Purpose
   =======
-     Get the BBC schedule, with PIDs and dates, for today and optional
-     extra past and/or future days.  If PIDs are repeated, only
-     the earliest is displayed, unless the -a (all) option is used.
-     The output is in latest-last order.
+     Get a BBC station's schedule, with PIDs and dates, for today and
+     optional extra past and/or future days.  If PIDs are repeated, only
+     the earliest is displayed; the -a (all) option includes repeated
+     PIDs.  The output is in latest-last order.
 
   Examples:
   =========
@@ -90,8 +90,11 @@ class MyHTMLParser( HTMLParser):
         # unidecode removes accents to stop print from grumbling about
         # codecs for standard output (especially when doing Radio3)
         #
-        self.title = unidecode.unidecode( self.title)
+        if self.title != '':   # yes, it did happen
+            self.title = unidecode.unidecode( self.title)
 
+        if self.pid == '':   # yes, it did happen
+            self.pid = '-'
         six.print_( '{0}-{1} {2} "{3}'.format( \
                            self.date, self.time, self.pid, self.title), end='')
         if self.subtitle:
@@ -169,6 +172,11 @@ class MyHTMLParser( HTMLParser):
         self.step = 0             # prepare for possible next page, why not?
 
 
+  def newPage( self, expected):
+    self.expected = expected
+    self.step = 0
+
+
 # -----------------------------------------------------------------------------
 #           These three functions only get called with Python2.X
 # -----------------------------------------------------------------------------
@@ -200,11 +208,6 @@ class MyHTMLParser( HTMLParser):
         self.subtitle = self.subtitle + character
 
 # -----------------------------------------------------------------------------
-
-
-  def newPage( self, expected):
-    self.expected = expected
-    self.step = 0
 
 
 def errorMessage( message):
