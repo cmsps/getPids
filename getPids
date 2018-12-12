@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 '''
-  getPids [-a] [-days] [+days] station [ region | hd | fm | lw | mw ]
+  getPids [-rm] [-days] [+days] station [ region | hd | fm | lw | mw ]
 
-  Tue Oct 2 11:56:02 BST 2018
+  Wed Dec 12 18:27:13 GMT 2018
 
   Copyright (C) 2018 Peter Scott - peterscott@pobox.com
 
@@ -24,14 +24,18 @@
   Purpose
   =======
      Get a BBC station's schedule, with PIDs and dates, for today and
-     optional extra past and/or future days.  If PIDs are repeated, only
-     the earliest is displayed; the -a (all) option includes repeated
-     PIDs.  The output is in latest-last order.
+     optional, extra past and/or future days.  getPids was designed for
+     radio schedules so, by default, it drops both repeated PIDs and
+     broadcasts after midnight.  The '-r' option includes repeated PIDs
+     and the '-m' option includes post-midnight broadcasts.  Use '-h'
+     for long option names.  As with the BBC schedules, the output is
+     in latest-last order.
 
   Examples:
   =========
      $ getPids       bbcone wales
      $ getPids       bbcone wales_hd
+     $ getPids -rm   bbcone wales
      $ getPids -30   bbctwo hd
      $ getPids +6    bbctwo england
      $ getPids       radio4 fm
@@ -83,29 +87,36 @@ class MyHTMLParser( HTMLParser):
 
   def printProgramme( self):
 
-    # Drop tomorrow's programmes and repeated PIDs, print the others.
+    # return now if dropping post-midnight programmes and this one
+    # is for "tomorrow"
     #
-    if (self.date == self.expected) and (self.pid not in self.hadPid):
+    if dropTomorrows and (self.date != self.expected):
+        return
 
-        # unidecode removes accents to stop print from grumbling about
-        # codecs for standard output (especially when doing Radio3)
-        #
-        if self.title != '':   # yes, it did happen
-            self.title = unidecode.unidecode( self.title)
+    # return now if dropping repeated PIDs and we have printed this one before
+    #
+    if dropRepeats and (self.pid in self.hadPid):
+        return
 
-        if self.pid == '':   # yes, it did happen
-            self.pid = '-'
-        six.print_( '{0}-{1} {2} "{3}'.format( \
+    # unidecode removes accents to stop print from grumbling about
+    # codecs for standard output (especially when doing Radio3)
+    #
+    if self.title != '':   # yes, it does happen
+        self.title = unidecode.unidecode( self.title)
+
+    if self.pid == '':   # yes, it does happen
+        self.pid = '-'
+    six.print_( '{0}-{1} {2} "{3}'.format( \
                            self.date, self.time, self.pid, self.title), end='')
-        if self.subtitle:
-            self.subtitle = unidecode.unidecode( self.subtitle)
-            six.print_( ' - {0}'.format( self.subtitle), end='')
-        if self.repeat == '':
-            six.print_( '"', end='\n')
-        else:
-            six.print_( '"', self.repeat, end='\n')
-        if avoidRepeats:
-            self.hadPid[self.pid] = True
+    if self.subtitle:
+        self.subtitle = unidecode.unidecode( self.subtitle)
+        six.print_( ' - {0}'.format( self.subtitle), end='')
+    if self.repeat == '':
+        six.print_( '"', end='\n')
+    else:
+        six.print_( '"', self.repeat, end='\n')
+    if dropRepeats:
+        self.hadPid[self.pid] = True
 
 
   def handle_starttag( self, tag, attrs):
@@ -211,38 +222,70 @@ class MyHTMLParser( HTMLParser):
 
 
 def errorMessage( message):
-  sys.stderr.write( NAME + ': ' + message + '\n')
+  sys.stderr.write( NAME + ': ' + message + '\n\n')
 
 
 def usage():
-  sys.stderr.write( 'Usage: ' + NAME + ' [-a] [-days] [+days] station ' + \
+  sys.stderr.write( 'Usage: ' + NAME + ' [-rm] [-days] [+days] station ' + \
       '[region | hd | fm | lw | mw]\n\n' + \
-      'Option:\n       -a     all pids including repeats\n')
+      'Options:\n' + \
+      '   -h, --help          show this help and exit\n'+ \
+      '   -r, --repeats       include repeated pids\n'+ \
+      '   -m, --midnights     include post-midnight programmes\n')
   exit( 1)
 
 
+def badShortOption( attempt):
+  attempt = re.sub( '-', '', attempt)
+  badUns = re.sub( '[hrm]', '', attempt)
+  if (len( badUns) == 1):
+      ess=''
+  else:
+      ess='s'
+  errorMessage( 'bad short option' + ess + ': ' + badUns)
+  usage()
+
+
 def getArgs():
-  global NAME, station, region, before, after, avoidRepeats
+  global NAME, station, region, before, after, dropRepeats, dropTomorrows
 
   NAME = os.path.basename( sys.argv[0])
   sys.argv.pop(0)
 
  # deal with -days, +days and options
  #
-  if len( sys.argv) == 0:
-      usage()
-  while re.match( '^[-+]',sys.argv[0]):
+ # --------------------------------------------------------------------
+ # I could have used getopt for this but I already had most of it and
+ # there was a learning curve.  Simplifications gratefully received!
+ # --------------------------------------------------------------------
+ #
+  while (len( sys.argv) != 0) and (re.match( '^[-+]',sys.argv[0])):
       if re.match( '^-[0-9][0-9]*$',sys.argv[0]):
           before = int( re.sub( '-', '', sys.argv[0]))
       elif re.match( '^\+[0-9][0-9]*$',sys.argv[0]):
           after = -1 - int( re.sub( '\+', '', sys.argv[0])) 
-      elif re.match( '^-a$', sys.argv[0]):
-          avoidRepeats = False
+      elif re.match( '^-[hrm][hrm]*$', sys.argv[0]):
+          if 'h' in sys.argv[0]:
+              usage()
+          elif 'r' in sys.argv[0]:
+              dropRepeats = False
+          elif 'm' in sys.argv[0]:
+              dropTomorrows = False
+      elif re.match( '^-[a-z][a-z]*$', sys.argv[0]):
+          badShortOption( sys.argv[0])
+      elif re.match( '^--help*$', sys.argv[0]):
+          usage()
+      elif re.match( '^--repeats*$', sys.argv[0]):
+          dropRepeats = False
+      elif re.match( '^--midnights*$', sys.argv[0]):
+          dropTomorrows = False
       else:
-          sys.stderr.write( 'Bad option: ' + sys.argv[0] + '\n\n')
+          sys.stderr.write( 'Bad long option: ' + sys.argv[0] + '\n\n')
           usage()
       sys.argv.pop(0)
 
+  # get station [ and region ]
+  #
   if len( sys.argv) == 0:
       usage()
   station = sys.argv[0]
@@ -260,8 +303,8 @@ station = ''
 region = ''
 before = 0
 after = -1
-avoidRepeats = True
-
+dropRepeats = True
+dropTomorrows = True
 
 if __name__ == '__main__':
 
