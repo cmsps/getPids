@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 '''
-  getPids [-rm] [-days] [+days] station [ region | hd | fm | lw | mw ]
+  getPids [-mr] [-days] [+days] station [ region | hd | fm | lw | mw ]
 
-  Wed Dec 12 18:27:13 GMT 2018
+  Thu Dec 13 16:15:10 GMT 2018
 
   Copyright (C) 2018 Peter Scott - peterscott@pobox.com
 
@@ -28,14 +28,14 @@
      radio schedules so, by default, it drops both repeated PIDs and
      broadcasts after midnight.  The '-r' option includes repeated PIDs
      and the '-m' option includes post-midnight broadcasts.  Use '-h'
-     for long option names.  As with the BBC schedules, the output is
-     in latest-last order.
+     to see long option names.  As with the BBC schedules, the output
+     is in latest-last order.
 
   Examples:
   =========
      $ getPids       bbcone wales
      $ getPids       bbcone wales_hd
-     $ getPids -rm   bbcone wales
+     $ getPids -mr   bbcone wales
      $ getPids -30   bbctwo hd
      $ getPids +6    bbctwo england
      $ getPids       radio4 fm
@@ -59,9 +59,6 @@
      I am not a Python programmer.  This is a transcription of an
      earlier shell script that used sed and awk for the screen scraping.
      All offers of improvement would be gladly accepted.
-
-     The output order differs from that of the original shell script.
-     This is partly to avoid reinventing Unix's tac command in Python.
 '''
 
 import six, requests, re, sys, datetime, time, os, string, unidecode
@@ -220,29 +217,27 @@ class MyHTMLParser( HTMLParser):
 
 # -----------------------------------------------------------------------------
 
-
 def errorMessage( message):
-  sys.stderr.write( NAME + ': ' + message + '\n\n')
+  sys.stderr.write( NAME + ': ' + message + '\n')
 
 
 def usage():
   sys.stderr.write( 'Usage: ' + NAME + ' [-rm] [-days] [+days] station ' + \
       '[region | hd | fm | lw | mw]\n\n' + \
       'Options:\n' + \
-      '   -h, --help          show this help and exit\n'+ \
-      '   -r, --repeats       include repeated pids\n'+ \
-      '   -m, --midnights     include post-midnight programmes\n')
+      '   -h, --help          show this help and exit\n' + \
+      '   -m, --midnights     include post-midnight programmes\n' + \
+      '   -r, --repeats       include repeated pids\n')
   exit( 1)
 
 
 def badShortOption( attempt):
-  attempt = re.sub( '-', '', attempt)
   badUns = re.sub( '[hrm]', '', attempt)
-  if (len( badUns) == 1):
+  if (len( badUns) == 2):
       ess=''
   else:
       ess='s'
-  errorMessage( 'bad short option' + ess + ': ' + badUns)
+  errorMessage( 'unknown short option' + ess + ': ' + badUns + '\n')
   usage()
 
 
@@ -259,7 +254,7 @@ def getArgs():
  # there was a learning curve.  Simplifications gratefully received!
  # --------------------------------------------------------------------
  #
-  while (len( sys.argv) != 0) and (re.match( '^[-+]',sys.argv[0])):
+  while len( sys.argv) and (re.match( '^[-+]',sys.argv[0])):
       if re.match( '^-[0-9][0-9]*$',sys.argv[0]):
           before = int( re.sub( '-', '', sys.argv[0]))
       elif re.match( '^\+[0-9][0-9]*$',sys.argv[0]):
@@ -267,20 +262,24 @@ def getArgs():
       elif re.match( '^-[hrm][hrm]*$', sys.argv[0]):
           if 'h' in sys.argv[0]:
               usage()
-          elif 'r' in sys.argv[0]:
-              dropRepeats = False
-          elif 'm' in sys.argv[0]:
-              dropTomorrows = False
-      elif re.match( '^-[a-z][a-z]*$', sys.argv[0]):
+          else:
+              if 'm' in sys.argv[0]:
+                   dropTomorrows = False
+              if 'r' in sys.argv[0]:
+                   dropRepeats = False
+      elif re.match( '^-[^-].*$', sys.argv[0]):
           badShortOption( sys.argv[0])
-      elif re.match( '^--help*$', sys.argv[0]):
+      elif re.match( '^--help$', sys.argv[0]):
           usage()
       elif re.match( '^--repeats*$', sys.argv[0]):
           dropRepeats = False
       elif re.match( '^--midnights*$', sys.argv[0]):
           dropTomorrows = False
+      elif re.match( '^--', sys.argv[0]):
+          errorMessage( 'unknown long option: ' + sys.argv[0] + '\n')
+          usage()
       else:
-          sys.stderr.write( 'Bad long option: ' + sys.argv[0] + '\n\n')
+          errorMessage( 'malformed option: ' + sys.argv[0] + '\n')
           usage()
       sys.argv.pop(0)
 
@@ -295,6 +294,8 @@ def getArgs():
   region = sys.argv[0]
   sys.argv.pop(0)
   if len( sys.argv) != 0:
+      errorMessage( 'extra argument after `' + region + "': " + \
+                                                            sys.argv[0] + '\n')
       usage()
 
 
