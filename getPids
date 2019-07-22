@@ -2,12 +2,12 @@
 '''
   getPids [-mr] [-days] [+days] station [ region | hd | fm | lw | mw ]
 
-  Fri Dec 14 17:06:19 GMT 2018
+  Mon Jul 22 11:56:23 BST 2019
 
   Copyright (C) 2019 Peter Scott - peterscott@pobox.com
 
   Licence
-  =======
+  -------
      This program is free software: you can redistribute it and / or modify
      it under the terms of the GNU General Public License as published by
      the Free Software Foundation, either version 3 of the License, or
@@ -22,7 +22,7 @@
      along with this program.  If not, see <http://www.gnu.org/licenses/>
 
   Purpose
-  =======
+  -------
      Get a BBC station's schedule, with PIDs and dates, for today and
      optional, extra, past and/or future days.  `getPids' was designed
      for radio schedules so, by default, it drops both repeated PIDs and
@@ -32,7 +32,7 @@
      is in latest-last order.
 
   Examples:
-  =========
+  ---------
      $ getPids       bbcone   # beware, the BBC redirects this to London
      $ getPids -mr   bbcone
      $ getPids       bbcone wales
@@ -50,8 +50,9 @@
      See: http://www.bbc.co.uk/radio/stations for more radio stations.
 
   Notes:
-  ======
-     getPids has been tested with Python 2.7 _and_ Python 3.6.
+  ------
+     getPids has been tested with Python 2.7 _and_ Python 3.7 and Linux.
+     Earlier versions were tested with Python 3.6 and Windoze 7.
 
      To allow getPids to run with Python 2.7 or Python 3 you need to
      install the 'six.py' module (via pip).  You will also need 'requests',
@@ -62,7 +63,7 @@
      All offers of improvement would be gladly accepted.
 '''
 
-import six, requests, re, sys, datetime, time, os, string, unidecode
+import six, requests, re, sys, datetime, os, string, unidecode, argparse
 if six.PY3:
     from html.parser import HTMLParser
 else:
@@ -85,14 +86,10 @@ class MyHTMLParser( HTMLParser):
 
   def printProgramme( self):
 
-    # return now if dropping post-midnight programmes and this one
-    # is for "tomorrow"
+    # return now if options mean output not wanted
     #
     if dropTomorrows and (self.date != self.expected):
         return
-
-    # return now if dropping repeated PIDs and we have printed this one before
-    #
     if dropRepeats and (self.pid in self.hadPid):
         return
 
@@ -108,11 +105,11 @@ class MyHTMLParser( HTMLParser):
                            self.date, self.time, self.pid, self.title), end='')
     if self.subtitle:
         self.subtitle = unidecode.unidecode( self.subtitle)
-        six.print_( ' - {0}'.format( self.subtitle), end='')
+        six.print_( ' -', self.subtitle, end='')
     if self.repeat == '':
-        six.print_( '"', end='\n')
+        six.print_( '"')
     else:
-        six.print_( '"', self.repeat, end='\n')
+        six.print_( '"', self.repeat)
     if dropRepeats:
         self.hadPid[self.pid] = True
 
@@ -143,7 +140,7 @@ class MyHTMLParser( HTMLParser):
     #
     for n in range( 0, len( attrs)):
         attr  = attrs[n][0]
-        value =  attrs[n][1]
+        value = attrs[n][1]
         if self.step == 1 and attr == 'content':
             self.date = re.sub( '-', '/', value[0:10])
             self.step = 2
@@ -223,8 +220,7 @@ def errorMessage( message):
 
 
 def usage():
-  sys.stderr.write( 'Usage: ' + NAME + ' [-mr] [-days] [+days] station ' + \
-      '[region | hd | fm | lw | mw]\n\n' + \
+  sys.stderr.write( 'Usage: ' + USAGE + '\n\n' + \
       'Options:\n' + \
       '   -h, --help          show this help and exit\n' + \
       '   -m, --midnights     include post-midnight programmes\n' + \
@@ -232,75 +228,65 @@ def usage():
   exit( 1)
 
 
-def badShortOption( attempt):
-  badUns = re.sub( '[hmr]', '', attempt)
-  if (len( badUns) == 2):
-      ess=''
-  else:
-      ess='s'
-  errorMessage( 'unknown short option' + ess + ': ' + badUns + '\n')
-  usage()
-
-
 def getArgs():
-  global NAME, station, region, before, after, dropRepeats, dropTomorrows
+  global NAME, USAGE, station, region, before, after, dropRepeats, \
+                                                                  dropTomorrows
+  class HelpAction( argparse.Action):
+      #
+      # argparse won't do optional args like -123 +123
+      #
+      def __call__( self, parser, namespace, values, option_string=None):
+          usage()
+          parser.exit()
 
   NAME = os.path.basename( sys.argv[0])
-  sys.argv.pop(0)
+  USAGE = NAME + ' [-hmr] [-days] [+days] station [region | hd | fm | lw | mw]'
 
- # deal with -days, +days and options
- #
- # --------------------------------------------------------------------
- # I could have used getopt for this but I already had most of it and
- # there was a learning curve.  Simplifications gratefully received!
- # --------------------------------------------------------------------
- #
-  while len( sys.argv) and (re.match( '^[-+]',sys.argv[0])):
-      if re.match( '^-[0-9][0-9]*$',sys.argv[0]):
-          before = int( re.sub( '-', '', sys.argv[0]))
-      elif re.match( '^\+[0-9][0-9]*$',sys.argv[0]):
-          after = -1 - int( re.sub( '\+', '', sys.argv[0])) 
-      elif re.match( '^-[hmr][hmr]*$', sys.argv[0]):
-          if 'h' in sys.argv[0]:
-              usage()
-          else:
-              if 'm' in sys.argv[0]:
-                   dropTomorrows = False
-              if 'r' in sys.argv[0]:
-                   dropRepeats = False
-      elif re.match( '^-[^-].*$', sys.argv[0]):
-          badShortOption( sys.argv[0])
-      elif re.match( '^--help$', sys.argv[0]):
-          usage()
-      elif re.match( '^--repeats*$', sys.argv[0]):
-          dropRepeats = False
-      elif re.match( '^--midnights*$', sys.argv[0]):
-          dropTomorrows = False
-      elif re.match( '^--', sys.argv[0]):
-          errorMessage( 'unknown long option: ' + sys.argv[0] + '\n')
-          usage()
-      else:
-          errorMessage( 'malformed option: ' + sys.argv[0] + '\n')
-          usage()
-      sys.argv.pop(0)
+  parser = argparse.ArgumentParser( usage=USAGE, add_help=False)
+  parser.add_argument( '-h', '--help', nargs=0, action=HelpAction)
+  parser.add_argument( '-m', '--midnights', action='store_true')
+  parser.add_argument( '-r', '--repeats', action='store_true')
+  args, argsLeft = parser.parse_known_args()
 
-  # get station [ and region ]
+  if args.repeats:
+      dropRepeats = False
+  if args.midnights:
+      dropTomorrows = False
+
+  # get -days and / or +days if present
   #
-  if len( sys.argv) == 0:
+  while len( argsLeft) and (re.match( '^[-+][0-9][0-9]*$',argsLeft[0])):
+      if re.match( '^-[0-9][0-9]*$',argsLeft[0]):
+          before = int( re.sub( '-', '', argsLeft[0]))
+      elif re.match( '^\+[0-9][0-9]*$',argsLeft[0]):
+          after = -1 - int( re.sub( '\+', '', argsLeft[0])) 
+      argsLeft.pop(0)
+
+  if len( argsLeft) == 0:
       usage()
-  station = sys.argv[0]
-  sys.argv.pop(0)
-  if len( sys.argv) == 0:
+  station = argsLeft.pop(0)
+  if len( argsLeft) == 0:
       return
-  region = sys.argv[0]
-  sys.argv.pop(0)
-  if len( sys.argv) != 0:
-      errorMessage( 'extra argument after `' + region + "': " + \
-                                                            sys.argv[0] + '\n')
+  region = argsLeft.pop(0)
+
+  if len( argsLeft) != 0:
+      reportExtraArgs( argsLeft)
+
+
+def reportExtraArgs( list):
+      extras = list.pop(0)
+      if len( list) == 0:
+          ess = '\n'
+      else:
+          ess = 's\n'
+          while len( list) != 0:
+              extras = extras + ' ' + list.pop(0)
+      errorMessage( extras + ': unexpected extra argument' + ess)
       usage()
 
 
 NAME = ''        # globals
+USAGE = ''
 station = ''
 region = ''
 before = 0
@@ -330,7 +316,7 @@ if __name__ == '__main__':
           response = page.status_code
       except:
           errorMessage( 'network error')
-          exit( 3)
+          exit( 2)
       if response == 200:
           parser.newPage( date)
           parser.feed( page.text)
@@ -340,7 +326,7 @@ if __name__ == '__main__':
               error = error + ' (continuing without it)'
           errorMessage( error)
           if n == after + 1:
-              exit( 4)
+              exit( 3)
       if n != after + 1:
           time.sleep( 2)          # niceness
   exit( 0)
