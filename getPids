@@ -2,7 +2,7 @@
 '''
   getPids [-mr] [-days] [+days] station [ region | hd | fm | lw | mw ]
 
-  Wed Jul 24 18:38:20 BST 2019
+  Wed Jul 24 18:55:07 BST 2019
 
   Copyright (C) 2019 Peter Scott - peterscott@pobox.com
 
@@ -252,16 +252,17 @@ def getArgs():
   # get -days and / or +days if present
   #
   while argsLeft and (re.match( '^[-+][0-9][0-9]*$',argsLeft[0])):
-      if re.match( '^-[0-9][0-9]*$',argsLeft[0]):
+      if re.match( '^-',argsLeft[0]):
           before = int( re.sub( '-', '', argsLeft[0]))
-      elif re.match( '^\+[0-9][0-9]*$',argsLeft[0]):
+      else:
           after = -1 - int( re.sub( '\+', '', argsLeft[0])) 
       argsLeft.pop(0)
 
   if not argsLeft:
+      errorMessage( 'no station specified\n')
       usage()
   station = argsLeft.pop(0)
-  if len( argsLeft) == 0:
+  if not argsLeft:
       return
   region = argsLeft.pop(0)
 
@@ -271,11 +272,11 @@ def getArgs():
 
 def reportExtraArgs( list):
       extras = list.pop(0)
-      if len( list) == 0:
+      if not list:
           ess = '\n'
       else:
           ess = 's\n'
-          while len( list) != 0:
+          while list:
               extras = extras + ' ' + list.pop(0)
       errorMessage( extras + ': unexpected extra argument' + ess)
       usage()
