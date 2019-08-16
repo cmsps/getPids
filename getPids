@@ -2,7 +2,7 @@
 '''
   getPids [-mr] [-days] [+days] station [ region | hd | fm | lw | mw ]
 
-  Wed Jul 24 18:55:07 BST 2019
+  Version: Fri Aug 16 13:36:39 BST 2019
 
   Copyright (C) 2019 Peter Scott - peterscott@pobox.com
 
@@ -146,7 +146,7 @@ class MyHTMLParser( HTMLParser):
         elif self.step == 4 and attr == 'data-pid':
             self.pid = value
             self.step = 5
-        elif self.step == 5 and value == 'programme__title ':
+        elif self.step == 5 and value == 'programme__title delta':
             self.step = 6 # wait for intervening span
         elif self.step == 7 and value == 'programme__subtitle centi':
             self.step = 8   # next data
