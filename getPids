@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 '''
-  getPids [-mr] [-days] [+days] station [ region | hd | fm | lw | mw ]
+  getPids [-mr] [-days] [+days] scheduleID
 
-  Version: Fri Aug 16 13:36:39 BST 2019
+  Version: Mon Sep 2 16:33:33 BST 2019
 
   Copyright (C) 2019 Peter Scott - peterscott@pobox.com
 
@@ -33,21 +33,14 @@
 
   Examples:
   ---------
-     $ getPids       bbcone   # beware, the BBC redirects this to London
-     $ getPids -mr   bbcone
-     $ getPids       bbcone wales
-     $ getPids       bbcone wales_hd
-     $ getPids -30   bbctwo hd
-     $ getPids +6    bbctwo england
-     $ getPids       radio4 fm
-     $ getPids       radio4 lw
-     $ getPids       radioscotland mw
-     $ getPids       radio3
-     $ getPids       1xtra
-     $ getPids -6 +6 6music
-     $ getPids       radionangaidheal
+     $ getPids       p00fzl7j
+     $ getPids -mr   p00fzl7j
+     $ getPids -30   p00fzl7j
+     $ getPids +6    p00fzl7j
+     $ getPids -6 +6 p00fzl7j
 
-     See: http://www.bbc.co.uk/radio/stations for more radio stations.
+     Get the schedule IDs from the schedule pages, or
+     see: https://www.bbc.co.uk/schedules
 
   Notes:
   ------
@@ -86,7 +79,7 @@ class MyHTMLParser( HTMLParser):
 
   def printProgramme( self):
 
-    # return now if options mean output not wanted
+    # don't print if options mean output not wanted
     #
     if dropTomorrows and (self.date != self.expected):
         return
@@ -99,7 +92,7 @@ class MyHTMLParser( HTMLParser):
     if self.title != '':   # yes, it does happen
         self.title = unidecode.unidecode( self.title)
 
-    if self.pid == '':   # yes, it does happen
+    if self.pid == '':     # it happens
         self.pid = '-'
     six.print_( '{0}-{1} {2} "{3}'.format( \
                            self.date, self.time, self.pid, self.title), end='')
@@ -147,7 +140,7 @@ class MyHTMLParser( HTMLParser):
             self.pid = value
             self.step = 5
         elif self.step == 5 and value == 'programme__title delta':
-            self.step = 6 # wait for intervening span
+            self.step = 6   # next data
         elif self.step == 7 and value == 'programme__subtitle centi':
             self.step = 8   # next data
         elif self.step == 9 and value == 'Repeat':
@@ -159,7 +152,7 @@ class MyHTMLParser( HTMLParser):
         self.time = data
         self.step = 4
     elif self.step == 6:
-        self.title = self.title + data   # can be several lines
+        self.title = self.title + data         # can be several lines
     elif self.step == 8:
         self.subtitle = self.subtitle + data   # can be several lines
 
@@ -167,9 +160,9 @@ class MyHTMLParser( HTMLParser):
   def handle_endtag( self, tag):
     if self.step == 6 and tag == 'span':    # end of title
         self.step = 7
-    elif tag == 'h4':    # end of subtitle
+    elif tag == 'h4':                       # end of subtitle
         self.step = 9
-    elif self.step == 9 and tag == 'p':   # end of programme's entry
+    elif self.step == 9 and tag == 'p':     # end of programme's entry
         self.printProgramme()
         self.step = 0
 
@@ -225,8 +218,7 @@ def usage():
 
 
 def getArgs():
-  global NAME, USAGE, station, region, before, after, dropRepeats, \
-                                                                  dropTomorrows
+  global NAME, USAGE, schedule, before, after, dropRepeats, dropTomorrows
   class HelpAction( argparse.Action):
       #
       # argparse won't do optional args like -123 +123
@@ -236,7 +228,7 @@ def getArgs():
           parser.exit()
 
   NAME = os.path.basename( sys.argv[0])
-  USAGE = NAME + ' [-hmr] [-days] [+days] station [region | hd | fm | lw | mw]'
+  USAGE = NAME + ' [-hmr] [-days] [+days] scheduleID'
 
   parser = argparse.ArgumentParser( usage=USAGE, add_help=False)
   parser.add_argument( '-h', '--help', nargs=0, action=HelpAction)
@@ -259,12 +251,9 @@ def getArgs():
       argsLeft.pop(0)
 
   if not argsLeft:
-      errorMessage( 'no station specified\n')
+      errorMessage( 'no schedule ID specified\n')
       usage()
-  station = argsLeft.pop(0)
-  if not argsLeft:
-      return
-  region = argsLeft.pop(0)
+  schedule = argsLeft.pop(0)
 
   if argsLeft:
       reportExtraArgs( argsLeft)
@@ -284,8 +273,7 @@ def reportExtraArgs( list):
 
 NAME = ''        # globals
 USAGE = ''
-station = ''
-region = ''
+schedule = ''
 before = 0
 after = -1
 dropRepeats = True
@@ -303,11 +291,7 @@ if __name__ == '__main__':
       month = str( scheduleDate.month).zfill( 2)
       day = str( scheduleDate.day).zfill( 2)
       date = year + '/' + month + '/' + day
-      url = 'http://www.bbc.co.uk/' + station + '/programmes/schedules/'
-      if region == '':
-          url = url + date
-      else:
-          url = url + region + '/' + date
+      url = 'https://www.bbc.co.uk/schedules/' + schedule + '/' + date
       try:
           page = requests.get( url)
           response = page.status_code
