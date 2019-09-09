@@ -2,7 +2,7 @@
 '''
   getPids [-mr] [-days] [+days] scheduleID
 
-  Version: Mon Sep 2 16:33:33 BST 2019
+  Version: Mon Sep 9 12:44:16 BST 2019
 
   Copyright (C) 2019 Peter Scott - peterscott@pobox.com
 
@@ -34,6 +34,8 @@
   Examples:
   ---------
      $ getPids       p00fzl7j
+     $ getPids -m    p00fzl7j
+     $ getPids -r    p00fzl7j
      $ getPids -mr   p00fzl7j
      $ getPids -30   p00fzl7j
      $ getPids +6    p00fzl7j
@@ -254,6 +256,9 @@ def getArgs():
       errorMessage( 'no schedule ID specified\n')
       usage()
   schedule = argsLeft.pop(0)
+  if len( schedule) != 8:
+      errorMessage( schedule + ": schedule ID isn't eight characters")
+      exit( 2)
 
   if argsLeft:
       reportExtraArgs( argsLeft)
@@ -297,7 +302,7 @@ if __name__ == '__main__':
           response = page.status_code
       except:
           errorMessage( 'network error')
-          exit( 2)
+          exit( 3)
       if response == 200:
           parser.newPage( date)
           parser.feed( page.text)
@@ -307,7 +312,7 @@ if __name__ == '__main__':
               error = error + ' (continuing without it)'
           errorMessage( error)
           if n == after + 1:
-              exit( 3)
+              exit( 4)
       if n != after + 1:
           time.sleep( 2)          # niceness
   exit( 0)
