@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 '''
-  getPids [-mr] [-days] [+days] scheduleID
+  getPids_3 [-mr] [-days] [+days] scheduleID
 
-  Version: Mon Sep 9 12:44:16 BST 2019
+  Version: Fri Apr 22 14:35:16 BST 2022
 
-  Copyright (C) 2021 Peter Scott - peterscott@pobox.com
+  Copyright (C) 2022 Peter Scott - peterscott@pobox.com
 
   Licence
   -------
@@ -24,46 +24,45 @@
   Purpose
   -------
      Get a BBC station's schedule, with PIDs and dates, for today and
-     optional, extra, past and/or future days.  `getPids' was designed
-     for radio schedules so, by default, it drops both repeated PIDs and
-     broadcasts after midnight.  The '-m' option includes post-midnight
-     broadcasts and the '-r' option includes repeated PIDs.  Use '-h'
-     to see long option names.  As with the BBC schedules, the output
-     is in latest-last order.
+     optional, extra, past and/or future days.
 
   Examples:
   ---------
-     $ getPids       p00fzl7j
-     $ getPids -m    p00fzl7j
-     $ getPids -r    p00fzl7j
-     $ getPids -mr   p00fzl7j
-     $ getPids -30   p00fzl7j
-     $ getPids +6    p00fzl7j
-     $ getPids -6 +6 p00fzl7j
+     $ getPids_3       p00fzl7j
+     $ getPids_3 -m    p00fzl7j
+     $ getPids_3 -r    p00fzl7j
+     $ getPids_3 -mr   p00fzl7j
+     $ getPids_3 -30   p00fzl7j
+     $ getPids_3 +6    p00fzl7j
+     $ getPids_3 -6 +6 p00fzl7j
 
-     Get the schedule IDs from the schedule pages, or
+     The schedule ID shown is BBC Radio 4 (FM).
+     Get the other schedule IDs from the schedule pages, or
      see: https://www.bbc.co.uk/schedules
 
   Notes:
   ------
-     getPids has been tested with Python 2.7 _and_ Python 3.7 and Linux.
-     Earlier versions were tested with Python 3.6 and Windoze 7.
+     `getPids' was designed for radio schedules so, by default, it drops
+     both repeated PIDs and broadcasts after midnight.  The '-m' option
+     includes post-midnight broadcasts and the '-r' option includes
+     repeated PIDs.  Use '-h' to see long option names.
 
-     To allow getPids to run with Python 2.7 or Python 3 you need to
-     install the 'six.py' module (via pip).  You will also need 'requests',
-     'HTMLParser' and 'unidecode'.
+     As with the BBC schedules, the output is in latest-last order.
+
+     The original python version worked with Python2 _and_ Python3.
+     It was also forgiving if used in a terminal that couldn't handle
+     UTF-8 text.
+
+     If your installation doesn't have them, you will need to install
+     'requests' and 'HTMLParser'(via pip.)
 
      I am not a Python programmer.  This is a transcription of an
      earlier shell script that used sed and awk for the screen scraping.
      All offers of improvement would be gladly accepted.
 '''
 
-import six, requests, re, sys, time, datetime, os, string, unidecode, argparse
-if six.PY3:
-    from html.parser import HTMLParser
-else:
-    from HTMLParser import HTMLParser
-    from htmlentitydefs import name2codepoint
+import requests, re, sys, time, datetime, os, string, argparse
+from html.parser import HTMLParser
 
 class MyHTMLParser( HTMLParser):
   def __init__( self):
@@ -88,23 +87,16 @@ class MyHTMLParser( HTMLParser):
     if dropRepeats and (self.pid in self.hadPid):
         return
 
-    # unidecode removes accents to stop print from grumbling about
-    # codecs for standard output (especially when doing Radio3)
-    #
-    if self.title != '':   # yes, it does happen
-        self.title = unidecode.unidecode( self.title)
-
     if self.pid == '':     # it happens
         self.pid = '-'
-    six.print_( '{0}-{1} {2} "{3}'.format( \
+    print( '{0}-{1} {2} "{3}'.format( \
                            self.date, self.time, self.pid, self.title), end='')
     if self.subtitle:
-        self.subtitle = unidecode.unidecode( self.subtitle)
-        six.print_( ' -', self.subtitle, end='')
+        print( ' -', self.subtitle, end='')
     if self.repeat == '':
-        six.print_( '"')
+        print( '"')
     else:
-        six.print_( '"', self.repeat)
+        print( '"', self.repeat)
     if dropRepeats:
         self.hadPid[self.pid] = True
 
@@ -174,38 +166,6 @@ class MyHTMLParser( HTMLParser):
     self.step = 0
 
 
-# -----------------------------------------------------------------------------
-#           These three functions only get called with Python2.X
-# -----------------------------------------------------------------------------
-
-  def handle_entityref( self, name):
-    if name == 'amp':
-        c = '&'
-    if name == 'mdash':
-        c = '-'
-    else:
-        c = unichr( name2codepoint[name])
-    self.append( c)
-
-
-  def handle_charref( self, name):
-    if name.startswith( 'x'):
-        c = unichr( int( name[1:], 16))
-    elif name == '027' or name == '039':
-        c = "'"
-    else:
-        c = unichr( int( name))
-    self.append( c)
-
-
-  def append( self, character):
-    if self.step == 6:
-        self.title = self.title + character
-    elif self.step == 8:
-        self.subtitle = self.subtitle + character
-
-# -----------------------------------------------------------------------------
-
 def errorMessage( message):
   sys.stderr.write( NAME + ': ' + message + '\n')
 
@@ -249,7 +209,7 @@ def getArgs():
       if re.match( '^-',argsLeft[0]):
           before = int( re.sub( '-', '', argsLeft[0]))
       else:
-          after = -1 - int( re.sub( '\+', '', argsLeft[0])) 
+          after = -1 - int( re.sub( '\+', '', argsLeft[0]))
       argsLeft.pop(0)
 
   if not argsLeft:
