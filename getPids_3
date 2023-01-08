@@ -2,9 +2,9 @@
 '''
   getPids_3 [-mr] [-days] [+days] scheduleID
 
-  Version: Fri Apr 22 14:35:16 BST 2022
+  Version: Tue Jun 21 12:25:59 BST 2022
 
-  Copyright (C) 2022 Peter Scott - peterscott@pobox.com
+  Copyright (C) 2023 Peter Scott - peterscott@pobox.com
 
   Licence
   -------
@@ -80,7 +80,7 @@ class MyHTMLParser( HTMLParser):
 
   def printProgramme( self):
 
-    # don't print if options mean output not wanted
+    # do nothing if options mean output not wanted
     #
     if dropTomorrows and (self.date != self.expected):
         return
@@ -97,8 +97,7 @@ class MyHTMLParser( HTMLParser):
         print( '"')
     else:
         print( '"', self.repeat)
-    if dropRepeats:
-        self.hadPid[self.pid] = True
+    self.hadPid[self.pid] = True
 
 
   def handle_starttag( self, tag, attrs):
