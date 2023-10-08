@@ -1,5 +1,5 @@
 # getPids
-Get PIDs from the BBC HTML schedules.
+Get programme IDs from the BBC HTML schedules.
 
 These scripts uses a Python parser to untangle the HTML.
 
