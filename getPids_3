@@ -2,7 +2,7 @@
 '''
   getPids_3 [-mr] [-days] [+days] scheduleID
 
-  Version: Tue Jun 21 12:25:59 BST 2022
+  Version: Tue Apr 30 12:55:31 BST 2024
 
   Copyright (C) 2024 Peter Scott - peterscott@pobox.com
 
@@ -208,7 +208,7 @@ def getArgs():
       if re.match( '^-',argsLeft[0]):
           before = int( re.sub( '-', '', argsLeft[0]))
       else:
-          after = -1 - int( re.sub( '\+', '', argsLeft[0]))
+          after = -1 - int( re.sub( r'\+', '', argsLeft[0]))
       argsLeft.pop(0)
 
   if not argsLeft:

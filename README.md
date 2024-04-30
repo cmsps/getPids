@@ -1,9 +1,9 @@
 # getPids
 Get programme IDs from the BBC HTML schedules.
 
-These scripts uses a Python parser to untangle the HTML.
+This script uses a Python parser to untangle the HTML.
 
-getPids (the original version) runs with Python2 _and_ Python3.
-Also, it works in non UTF-8 terminals.
+getPids (the original version) ran with Python2 _and_ Python3.
+It has been abandoned.
 
-getPids_3 is simpler and shorter -- it expects Python3 and UTF-8.
+getPids_3 is simpler and shorter -- it expects Python3 and a UTF-8 terminal.
